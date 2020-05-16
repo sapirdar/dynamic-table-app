@@ -1,0 +1,62 @@
+.data-table {
+
+    .scroll-waypoint {
+        border: 0;
+    }
+
+    .extra-space {
+        display: inline-block;
+        border: 0;
+    }
+
+    thead,
+    tbody {
+        display: block;
+    }
+
+    tr {
+        width: 100%;
+        display: inline-block;
+
+        &.scroll-waypoint,
+        &.extra-space {
+            height: 100px;
+            border: 0;
+
+            td {
+                border: 0;
+                position: relative;
+                width: 100%;
+                display: inline-block;
+
+                .spinner {
+                    position: absolute;
+                    left: 40%;
+                }
+            }
+        }
+    }
+
+    td,
+    th {
+        min-width: 150px;
+
+        &.checkbox {
+            min-width: initial;
+            width: 50px;
+        }
+    }
+
+    tbody {
+
+        max-height: 500px;
+        overflow: auto;
+    }
+
+    .messages {
+        position: fixed;
+        right: 20px;
+        bottom: 5px;
+    }
+
+}
