@@ -1,8 +1,10 @@
 import React, { Component, RefObject } from 'react';
 import './DataTable.scss';
-import { ITableSchema, ITableSchemaColumn, TableSchemaColumnType } from '../../interfaces/tableSchema';
+import { ITableSchema, ITableSchemaColumn } from '../../interfaces/tableSchema';
 import ApiService from '../../services/api.service';
 import { Waypoint } from 'react-waypoint';
+import DataTableColumn from '../DataTableColumn/DataTableColumn';
+import SystemMessage from '../SystemMessage/SystemMessage';
 
 type DataTableState = {
   tableData: any[];
@@ -43,8 +45,9 @@ class DataTable extends Component<DataTableProps, DataTableState> {
   render() {
     return (
       <div className="data-table">
+      <h3 className="text-center pb-5">Dynamic Data Table</h3>
         <div className="row">
-          <div className="col">
+          <div className="col text-center">
             <button className="btn btn-info m-3" onClick={this.generateSchema}>Generate Schema
               {this.state.isSchemaGenerating ? <span className="spinner-border spinner-border-sm ml-2" role="status" aria-hidden="true"></span> : null}
             </button>
@@ -63,15 +66,15 @@ class DataTable extends Component<DataTableProps, DataTableState> {
                 <thead>
                   <tr>
                     <th className="checkbox">Select</th>
-                    {this.state.tableSchema?.columns.map((col: ITableSchemaColumn) => (
-                      <th scope="col" key={'th_' + col.name}>{col.name}</th>
+                    {this.state.tableSchema?.columns.map((col: ITableSchemaColumn, index: number) => (
+                      <th scope="col" key={'th_' + index}>{col.name}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody ref={this.tableRef}>
                   {this.state.tableData.length > 0 && this.state.page > this.state.pageSize ?
                     <tr className="scroll-waypoint">
-                      <td>
+                      <td colSpan={this.state.tableSchema?.columns.length + 1}>
                         <Waypoint onEnter={() => { this.handleWaypointEnter(true) }} />
                         {this.state.isLazyLoading && this.state.lazyLoadMode === 'prev' ?
                           <div className="text-center spinner">
@@ -82,18 +85,20 @@ class DataTable extends Component<DataTableProps, DataTableState> {
                       </td>
                     </tr>
                     : null}
-                  {this.state.tableData?.map((row: any, rowIndex: number) => (
+                  {this.state.tableData?.map((dataObject: any, rowIndex: number) => (
                     <tr key={'row_' + rowIndex.toString()}>
                       <td className="checkbox"><input type="checkbox" /></td>
                       {this.state.tableSchema?.columns.map((col: ITableSchemaColumn, colIndex: number) => (
-                        <td key={'row_' + rowIndex.toString() + 'col_' + colIndex.toString()}> {this.renderColumn(row, col, rowIndex)}</td>
+                        <td key={'row_' + rowIndex.toString() + 'col_' + colIndex.toString()}>
+                          <DataTableColumn dataObject={dataObject} col={col} />
+                        </td>
                       ))}
                     </tr>
                   )
                   )}
                   {this.state.tableData.length > 0 ?
                     <tr className="scroll-waypoint">
-                      <td>
+                      <td colSpan={this.state.tableSchema?.columns.length + 1}>
                         {this.state.isLazyLoading && this.state.lazyLoadMode === 'next' ?
                           <div className="text-center spinner">
                             <div className="spinner-border" role="status">
@@ -109,43 +114,11 @@ class DataTable extends Component<DataTableProps, DataTableState> {
               : null}
           </div>
         </div>
-        {this.state.isError ?
-          <div className="messages">
-            <div className="alert alert-danger" role="alert">
-              <span className="mr-2">Error occured, please try again.</span>
-              <button type="button" className="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button></div>
-          </div>
-          : null}
-
+        {this.state.isError ? <SystemMessage type="danger" text="Error occurred, please try again." /> : null}
       </div>
     );
   }
 
-  private renderColumn(row: any, col: ITableSchemaColumn, rowIndex: number) {
-    let key = col.name.split(" ").join('_');
-    let value = row[key]
-    switch (col.type) {
-      case TableSchemaColumnType.date:
-        let formatted = Intl.DateTimeFormat('he-IL', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(value));
-        return formatted;
-      case TableSchemaColumnType.actionButtons:
-        const elementId = `${key}_${rowIndex}_menu`;
-        return (
-          <div className="dropdown">
-            <button className="btn btn-primary dropdown-toggle" type="button" id={elementId} data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              Actions
-              </button>
-            <div className="dropdown-menu" aria-labelledby={elementId}>
-              {value.map((action: string) => <button key={action + '_' + elementId} className="dropdown-item">{action}</button>)}
-            </div>
-          </div>
-        )
-      default:
-        return value;
-    }
-  }
 
   handleWaypointEnter = (isFirst: boolean) => {
     if (isFirst && this.state.page > this.state.pageSize) {
@@ -159,7 +132,7 @@ class DataTable extends Component<DataTableProps, DataTableState> {
   }
 
   private generateSchema = () => {
-    this.updateState({ isSchemaGenerating: true });
+    this.updateState({ isSchemaGenerating: true, isError: false });
     this.apiService.generateSchema().then((data: ITableSchema) => {
       this.updateState({ isSchemaGenerating: false });
       this.updateState({ tableSchema: data });
@@ -169,6 +142,7 @@ class DataTable extends Component<DataTableProps, DataTableState> {
   }
 
   private getSchema = () => {
+    this.updateState({ isError: false });
     this.apiService.getSchema(this.props.schemaName).then((data: ITableSchema) => {
       this.updateState({ tableSchema: data });
     }).catch((e) => {
@@ -177,7 +151,7 @@ class DataTable extends Component<DataTableProps, DataTableState> {
   }
 
   private generateData = () => {
-    this.updateState({ isDataGenerating: true });
+    this.updateState({ isDataGenerating: true, isError: false });
     this.apiService.generateData().then((isSuccess) => {
       this.updateState({ isDataGenerating: false });
       if (isSuccess) {
@@ -190,16 +164,16 @@ class DataTable extends Component<DataTableProps, DataTableState> {
 
   private getData = () => {
     if (this.state.lazyLoadMode !== 'none') {
-      this.updateState({ isLazyLoading: true });
+      this.updateState({ isLazyLoading: true, isError: false });
     } else {
-      this.updateState({ isDataLoading: true });
+      this.updateState({ isDataLoading: true, isError: false });
     }
 
     if (!this.state.tableSchema) {
       this.getSchema();
     }
 
-    this.apiService.getData('promotions', this.state.page - 1, this.state.pageSize).then((data) => {
+    this.apiService.getData(this.props.schemaName, this.state.page - 1, this.state.pageSize).then((data) => {
       this.updateState({ isLazyLoading: false, isDataLoading: false });
       this.updateState({ tableData: data });
 
