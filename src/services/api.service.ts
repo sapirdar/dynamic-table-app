@@ -7,7 +7,7 @@ class ApiService {
         const requestOptions = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: ""
+            body: JSON.stringify(this.getPromotionsSchema())
         };
         return fetch(`${this.apiBaseUrl}/tableSchema`, requestOptions)
             .then(async response => {
@@ -54,7 +54,7 @@ class ApiService {
             headers: { 'Content-Type': 'application/json' },
             body: ""
         };
-        return fetch(`${this.apiBaseUrl}/api/tableData`, requestOptions)
+        return fetch(`${this.apiBaseUrl}/tableData`, requestOptions)
             .then(async response => {
                 const data = await response.json();
                 // check for error response
@@ -73,8 +73,8 @@ class ApiService {
             });
     }
 
-    getPage(start: number, count: number): Promise<any> {
-        return fetch(`${this.apiBaseUrl}/tableData/${start}/${count}`)
+    getData(schemaName:string, start: number, count: number): Promise<any> {
+        return fetch(`${this.apiBaseUrl}/tableData/${schemaName}/${start}/${count}`)
             .then(async response => {
                 const data = await response.json();
                 // check for error response
@@ -91,6 +91,38 @@ class ApiService {
                 console.error('There was an error!', error);
                 return Promise.reject(error);
             });
+    }
+
+    private getPromotionsSchema(){
+        return {
+            "shcemaName": "promotions",
+            "columns": [
+              {
+                "name": "Promotion Name",
+                "type": "text"
+              },
+              {
+                "name": "Type",
+                "type": "text"
+              },
+              {
+                "name": "Start Date",
+                "type": "date"
+              },
+              {
+                "name": "End Date",
+                "type": "date"
+              },
+              {
+                "name": "User Group Name",
+                "type": "text"
+              },
+              {
+                "name": "Actions Button",
+                "type": "actionButtons",
+              }
+            ]
+          };
     }
 }
 

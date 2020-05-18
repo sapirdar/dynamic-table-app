@@ -199,7 +199,7 @@ class DataTable extends Component<DataTableProps, DataTableState> {
       this.getSchema();
     }
 
-    this.apiService.getPage(this.state.page - 1, this.state.pageSize).then((data) => {
+    this.apiService.getData('promotions', this.state.page - 1, this.state.pageSize).then((data) => {
       this.updateState({ isLazyLoading: false, isDataLoading: false });
       this.updateState({ tableData: data });
 
