@@ -1,4 +1,4 @@
-#dynamic-table-app
+dynamic-table-app
 
 To install packages run 'npm install' in the console.
 
